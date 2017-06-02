@@ -7,13 +7,14 @@ import java.util.Random;
 
 import javax.imageio.ImageIO;
 
-import org.lwjgl.util.vector.Vector2f;
-import org.lwjgl.util.vector.Vector3f;
+import org.joml.Vector2f;
+import org.joml.Vector3f;
 
 import models.RawModel;
 import renderEngine.Loader;
 import textures.ModelTexture;
 import textures.TerrainTexture;
+import textures.Texture;
 import toolbox.Maths;
 
 public class Terrain {
@@ -27,6 +28,7 @@ public class Terrain {
 	private float _z;
 	
 	private RawModel _model;
+	
 	private TerrainTexturePack _textures;
 	private TerrainTexture _blendMap;
 	
@@ -233,7 +235,7 @@ public class Terrain {
 		float heightD = getHeight(heightGenerator, x, z - 1);
 		
 		Vector3f normal = new Vector3f(heightL - heightR, 2f, heightD - heightU);
-		normal.normalise();
+		normal.normalize();
 		return normal;
 	}
 	
@@ -244,7 +246,7 @@ public class Terrain {
 		float heightD = getHeight(image, x, z - 1);
 		
 		Vector3f normal = new Vector3f(heightL - heightR, 2f, heightD - heightU);
-		normal.normalise();
+		normal.normalize();
 		return normal;
 	}
 }

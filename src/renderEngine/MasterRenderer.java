@@ -1,34 +1,38 @@
-package renderEngine;
+  package renderEngine;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
-import org.lwjgl.util.vector.Matrix4f;
-import org.lwjgl.util.vector.Vector4f;
 
 import ambient.Fog;
 import entities.Camera;
 import entities.Entity;
-import entities.EntityRenderer;
-import entities.EntityShader;
 import entities.Light;
 import entities.Player;
+import guis.GuiRenderer;
+import guis.GuiShader;
+import guis.GuiTexture;
 import models.TexturedModel;
 import normalMappingRenderer.NormalMappingRenderer;
 import normalMappingRenderer.NormalMappingShader;
 import shadows.ShadowMapMasterRenderer;
+import terrains.Terrain;
+import terrains.TerrainShader;
+import org.joml.Matrix4f;
+import org.joml.Vector4f;
+
+import entities.EntityRenderer;
+import entities.EntityShader;
 import skybox.SkyboxRenderer;
 import skybox.SkyboxShader;
-import terrains.Terrain;
+
 import terrains.TerrainRenderer;
 import terrains.TerrainSet;
-import terrains.TerrainShader;
-import water.WaterFrameBuffer;
+import water.WaterFrameBuffers;
 import water.WaterRenderer;
 import water.WaterShader;
 import water.WaterTile;
@@ -46,15 +50,19 @@ public class MasterRenderer {
 	private TerrainShader terrainShader;
 	private TerrainRenderer terrainRenderer;
 	
+	private GuiShader guiShader;
+	private GuiRenderer guiRenderer;
+	
 	private SkyboxShader skyboxShader;
 	private SkyboxRenderer skyboxRenderer;
 	
 	private Map<TexturedModel, List<Entity>> entities;
 	private List<Terrain> terrains;
+	private List<GuiTexture> guis;
 	private Map<TexturedModel, List<Entity>> normalMapEntities;
 	
 	private WaterShader waterShader;
-	private WaterFrameBuffer waterFBOs;
+	private WaterFrameBuffers waterFBOs;
 	private WaterRenderer waterRenderer;
 	
 	private NormalMappingShader normalMapShader;
@@ -73,6 +81,10 @@ public class MasterRenderer {
 		terrainShader = new TerrainShader();
 		terrainRenderer = new TerrainRenderer(terrainShader, projectionMatrix);
 		terrains = new ArrayList<>();
+		
+		guiShader = new GuiShader();
+		guiRenderer = new GuiRenderer(loader, guiShader);
+		guis = new ArrayList<>();
 		
 		waterShader = new WaterShader();
 		waterRenderer = new WaterRenderer(loader, waterShader, projectionMatrix);
@@ -124,7 +136,11 @@ public class MasterRenderer {
 		terrains.add(terrain);
 	}
 	
-	public void renderScene(Player player, List<Entity> entities, List<Entity> normalMapEntities, TerrainSet terrains, List<WaterTile> water, WaterFrameBuffer waterFBO, List<Light> lights, Camera camera, Vector4f clipPlane){
+	private void processGui(GuiTexture gui) {
+		guis.add(gui);
+	}
+	
+	public void renderScene(Player player, List<Entity> entities, List<Entity> normalMapEntities, TerrainSet terrains,  List<WaterTile> water, WaterFrameBuffers waterFBO, List<Light> lights, Camera camera, Vector4f clipPlane){
 		processEntity(player);
 		
 		for(Entity entity : entities)
@@ -132,15 +148,31 @@ public class MasterRenderer {
 		
 		for(Entity entity : normalMapEntities)
 			processNormalMapEntity(entity);
-		
+
 		for(int i = 0; i < terrains.getNumTerrains(); ++i)
 			processTerrain(terrains.getTerrainByIndex(i));
 		
-		//rendering
-		render(water, waterFBO, lights, camera, clipPlane);
+		render(lights, camera, clipPlane);
 	}
 	
-	private void render(List<WaterTile> water, WaterFrameBuffer waterFBO, List<Light> lights, Camera camera, Vector4f clipPlane){
+	public void renderGui(List<GuiTexture> guis) {
+		for(GuiTexture gui : guis)
+			processGui(gui);
+		
+		guiRenderer.render(this.guis);
+		guis.clear();
+	}
+
+	public void renderWater(List<WaterTile> water, WaterFrameBuffers waterFBO, List<Light> lights, Camera camera) {
+
+		if(water != null){
+			waterShader.start();
+			waterRenderer.render(water, camera, lights, waterFBO);
+			waterShader.stop();
+		}
+	}
+	
+	private void render(List<Light> lights, Camera camera, Vector4f clipPlane){
 		prepare();
 		/* ENTITY */
 		entityShader.start();
@@ -162,15 +194,6 @@ public class MasterRenderer {
 		terrainShader.stop();
 		terrains.clear();
 		
-		/* WATER */
-		if(water != null){
-			waterShader.start();
-			waterShader.loadSkyColor(Fog.FOG_COLOR);
-			waterShader.loadCameraParameters(camera);
-			waterRenderer.render(water, camera, lights, waterFBO);
-			waterShader.stop();
-		}
-		
 		/* SKYBOX */
 		skyboxShader.start();
 		skyboxShader.loadViewMatrix(camera);
@@ -182,10 +205,10 @@ public class MasterRenderer {
 		/* NORMAL MAP ENTITIES */
 		normalMapShader.start();
 		normalMapShader.loadSkyColor(Fog.FOG_COLOR);
-		normalMapShader.loadLights(lights, camera);
 		normalMapShader.loadViewMatrix(camera);
+		normalMapShader.loadLights(lights, camera);
 		normalMapShader.loadClipPlane(clipPlane);
-		normalMapRenderer.render(normalMapEntities, shadowMapRenderer.getToShadowMapSpaceMatrix());
+		normalMapRenderer.render(normalMapEntities);//, shadowMapRenderer.getToShadowMapSpaceMatrix());
 		normalMapShader.stop();
 		normalMapEntities.clear();
 	}
@@ -212,34 +235,28 @@ public class MasterRenderer {
 	public void cleanUp(){
 		entityShader.cleanUp();
 		terrainShader.cleanUp();
+		guiShader.cleanUp();
 		skyboxShader.cleanUp();
+		waterShader.cleanUp();
 		normalMapShader.cleanUp();
 		shadowMapRenderer.cleanUp();
 	}
 
-	private void prepare(){
+	public void prepare(){
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-		GL11.glClearColor(0, 0, 0, 1);
+
+		GL11.glClearColor(Fog.FOG_COLOR.x, Fog.FOG_COLOR.y,Fog.FOG_COLOR.z, 1);
 		
 		GL13.glActiveTexture(GL13.GL_TEXTURE5);
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, shadowMapRenderer.getShadowMap());	
 		
 	}
 	
-	private void createProjectionMatrix(){
-		float aspectRatio = (float) Display.getWidth() / (float) Display.getHeight();
-		float y_scale = (float) ((1f / Math.tan(Math.toRadians(FOV / 2f))));
-		float x_scale = y_scale / aspectRatio;
-		float frustum_length = FAR_PLANE - NEAR_PLANE;
- 
-		projectionMatrix = new Matrix4f();
-		projectionMatrix.m00 = x_scale;
-		projectionMatrix.m11 = y_scale;
-		projectionMatrix.m22 = -((FAR_PLANE + NEAR_PLANE) / frustum_length);
-		projectionMatrix.m23 = -1;
-		projectionMatrix.m32 = -((2 * NEAR_PLANE * FAR_PLANE) / frustum_length);
-		projectionMatrix.m33 = 0;
+	private void createProjectionMatrix() {
+		float windowWidth = (float) DisplayManager.getWindowWidth();
+		float windowHeight = (float) DisplayManager.getWindowHeight();
+	    projectionMatrix = new Matrix4f().perspective((float) Math.toRadians(FOV), windowWidth / windowHeight, NEAR_PLANE, FAR_PLANE);
 	}
 	
 	public Matrix4f getProjectionMatrix(){

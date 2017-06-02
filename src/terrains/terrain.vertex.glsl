@@ -1,62 +1,45 @@
 #version 400 core
 
-#define NUM_LIGHTS 4
+#define NUM_LIGHTS 7
 
 in vec3 inPosition;
 in vec2 inTexCoord;
 in vec3 inNormal;
 
-out vec2 outTexCoord;
-out vec3 outNormal;
-out vec3 outToLightVector[NUM_LIGHTS];
-out vec3 outToCameraVector;
-out float visibilityFog;
-out vec4 shadowCoords;
+out vec2 passTextureCoords;
+out vec3 surfaceNormal;
+out vec3 toLightVector[NUM_LIGHTS];
+out vec3 toCameraVector;
+out float visibility;
 
-//MATRICES
 uniform mat4 transformationMatrix;
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
 
-//LIGHT PARAMETERS
 uniform vec3 lightPosition[NUM_LIGHTS];
 
-//FOG PARAMETERS
 uniform float density;
 uniform float gradient;
 
-//CLIP PLANE
 uniform vec4 clipPlane;
 
-//SHADOWMAP
-uniform mat4 toShadowMapSpace;
-uniform float shadowDistance;
-uniform float transitionDistance;
-
-void main(void){
-
+void main(void)  {
 	vec4 worldPosition = transformationMatrix * vec4(inPosition, 1.0);
-
-	shadowCoords = toShadowMapSpace * worldPosition;
-
-	gl_ClipDistance[0] = dot(worldPosition, clipPlane);	
+	
+	gl_ClipDistance[0] = dot(worldPosition, clipPlane);
 	
 	vec4 positionCameraSpace = viewMatrix * worldPosition;
-
 	gl_Position = projectionMatrix * positionCameraSpace;
-	outTexCoord = inTexCoord;	
 	
-	outNormal = (transformationMatrix * vec4(inNormal, 0.0)).xyz;
-	for(int i = 0; i < NUM_LIGHTS; ++i)
-		outToLightVector[i] = lightPosition[i] - worldPosition.xyz;
-	
-	outToCameraVector = (inverse(viewMatrix) * vec4(0,0,0,1)).xyz - worldPosition.xyz;
-	
-	float distanceFromCamera = length(positionCameraSpace.xyz);
-	
-	visibilityFog = clamp(exp(-pow(distanceFromCamera * density, gradient)), 0, 1);
-	
-	distanceFromCamera = distanceFromCamera - (shadowDistance - transitionDistance);
-	distanceFromCamera = distanceFromCamera / transitionDistance;
-	shadowCoords.w = clamp(1.0 - distanceFromCamera, 0.0,1.0);
+    passTextureCoords = inTexCoord;
+    
+    surfaceNormal = (transformationMatrix * vec4(inNormal, 0)).xyz;
+    for(int i = 0; i < NUM_LIGHTS; i++) {
+    	toLightVector[i] = lightPosition[i] - worldPosition.xyz;
+    }
+    toCameraVector = (inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz - worldPosition.xyz;
+        
+    float distance = length(positionCameraSpace.xyz);
+    visibility = exp(-pow((distance * density), gradient));
+    visibility = clamp(visibility, 0.0, 1.0);
 }

@@ -7,7 +7,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
-import org.lwjgl.util.vector.Matrix4f;
+import org.joml.Matrix4f;
 
 import entities.Entity;
 import models.RawModel;
@@ -46,7 +46,7 @@ public class ShadowMapEntityRenderer {
 			RawModel rawModel = model.getModel();
 			bindModel(rawModel);
 			GL13.glActiveTexture(GL13.GL_TEXTURE0);
-			GL11.glBindTexture(GL11.GL_TEXTURE_2D, model.getTexture().getTBO());
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D, model.getTexture().GetID());
 			if(model.getTexture().hasTransparency())
 				MasterRenderer.disableFaceCulling();
 			for (Entity entity : entities.get(model)) {
@@ -88,7 +88,7 @@ public class ShadowMapEntityRenderer {
 	private void prepareInstance(Entity entity) {
 		Matrix4f modelMatrix = Maths.createTransformationMatrix(entity.getPosition(),
 				entity.getRotation(), entity.getScale());
-		Matrix4f mvpMatrix = Matrix4f.mul(projectionViewMatrix, modelMatrix, null);
+		Matrix4f mvpMatrix = projectionViewMatrix.mul(modelMatrix, new Matrix4f());
 		shader.loadMvpMatrix(mvpMatrix);
 	}
 

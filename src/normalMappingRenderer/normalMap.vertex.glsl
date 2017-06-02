@@ -1,78 +1,57 @@
 #version 400 core
 
-#define NUM_LIGHTS 4
+#define NUM_LIGHTS 7
 
-in vec3 inPosition;
-in vec2 inTexCoord;
-in vec3 inNormal;
-in vec3 inTangent;
+in vec3 position;
+in vec2 textureCoordinates;
+in vec3 normal;
+in vec3 tangent;
 
-out vec2 outTexCoord;
-out vec3 outToLightVector[NUM_LIGHTS];
-out vec3 outToCameraVector;
-out float visibilityFog;
-out vec4 shadowCoords;
+out vec2 pass_textureCoordinates;
+out vec3 toLightVector[NUM_LIGHTS];
+out vec3 toCameraVector;
+out float visibility;
 
-//MATRICES
 uniform mat4 transformationMatrix;
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
+uniform vec3 lightPositionEyeSpace[NUM_LIGHTS];
 
-//LIGHT PARAMETERS
-uniform vec3 lightPosition[NUM_LIGHTS];
-uniform float fakeLight;
-
-//FOG PARAMETERS
-uniform float density;
-uniform float gradient;
-
-//TEXTURE ATLAS
 uniform float numberOfRows;
-uniform vec2 offsetTexture;
+uniform vec2 offset;
 
-//CLIP_PLANE
-uniform vec4 clipPlane;
+const float density = 0;
+const float gradient = 5.0;
 
-//SHADOWMAP
-uniform mat4 toShadowMapSpace;
-uniform float shadowDistance;
-uniform float transitionDistance;
+uniform vec4 plane;
 
 void main(void){
-
-	vec4 worldPosition = transformationMatrix * vec4(inPosition, 1.0);
-	
-	shadowCoords = toShadowMapSpace * worldPosition;
-	
-	gl_ClipDistance[0] = dot(worldPosition, clipPlane);
-	
+	vec4 worldPosition = transformationMatrix * vec4(position,1.0);
+	gl_ClipDistance[0] = dot(worldPosition, plane);
 	mat4 modelViewMatrix = viewMatrix * transformationMatrix;
-	vec4 positionCameraSpace = viewMatrix * worldPosition;
-	gl_Position = projectionMatrix * positionCameraSpace;
+	vec4 positionRelativeToCam = modelViewMatrix * vec4(position,1.0);
+	gl_Position = projectionMatrix * positionRelativeToCam;
 	
-	outTexCoord = (inTexCoord / numberOfRows) + offsetTexture;
+	pass_textureCoordinates = (textureCoordinates/numberOfRows) + offset;
 	
-	vec3 outNormal = (modelViewMatrix * vec4(inNormal,0.0)).xyz;
+	vec3 surfaceNormal = normalize((modelViewMatrix * vec4(normal,0.0)).xyz);
+	vec3 norm = normalize(surfaceNormal);
+	vec3 tang = normalize((modelViewMatrix * vec4(tangent, 0.0)).xyz);
+	vec3 bitang = normalize(cross(norm, tang));
 	
-	vec3 norm = normalize(outNormal);
-	vec3 tang = normalize((modelViewMatrix * vec4(inTangent, 0.0)).xyz);
-	vec3 biTang = normalize(cross(norm, tang));
-	
-	mat3 toTangentSpace = mat3(
-		tang.x, biTang.x, norm.x,
-		tang.y, biTang.y, norm.y,
-		tang.z, biTang.z, norm.z
+	mat3 toTangSpace = mat3(
+		tang.x, bitang.x, norm.x,
+		tang.y, bitang.y, norm.y,
+		tang.z, bitang.z, norm.z
 	);
 	
-	for(int i = 0; i < NUM_LIGHTS; i++){
-		outToLightVector[i] = toTangentSpace * (lightPosition[i] - positionCameraSpace.xyz);
+	for(int i=0;i<NUM_LIGHTS;i++){
+		toLightVector[i] = toTangSpace * (lightPositionEyeSpace[i] - positionRelativeToCam.xyz);
 	}
-	outToCameraVector = toTangentSpace * (-positionCameraSpace.xyz);
+	toCameraVector = toTangSpace * (-positionRelativeToCam.xyz);
 	
-	float distanceFromCamera = length(positionCameraSpace.xyz);
-	visibilityFog = clamp(exp(-pow(distanceFromCamera * density, gradient)), 0, 1);
+	float distance = length(positionRelativeToCam.xyz);
+	visibility = exp(-pow((distance*density),gradient));
+	visibility = clamp(visibility,0.0,1.0);
 	
-	distanceFromCamera = distanceFromCamera - (shadowDistance - transitionDistance);
-	distanceFromCamera = distanceFromCamera / transitionDistance;
-	shadowCoords.w = clamp(1.0 - distanceFromCamera, 0.0,1.0);
 }

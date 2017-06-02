@@ -1,6 +1,6 @@
 package entities;
 
-import org.lwjgl.util.vector.Vector3f;
+import org.joml.Vector3f;
 
 import models.TexturedModel;
 
@@ -8,9 +8,9 @@ public class Entity {
 	private TexturedModel _model;
 	private Vector3f _position;
 	private Vector3f _rotation;
-	private Vector3f _scale;
+	private Vector3f _scale; 
 	
-	private int _textureIndex;
+	private int _textureIndex = 0;
 	
 	public Entity(TexturedModel model, Vector3f position, Vector3f rotation, Vector3f scale){
 		this(model, 0, position, rotation, scale);
@@ -57,24 +57,30 @@ public class Entity {
 	}
 	
 	public void increasePosition(Vector3f delta){
-		Vector3f.add(_position, delta, _position);
+		this._position.x += delta.x;
+		this._position.y += delta.y;
+		this._position.z += delta.z;
 	}
 	
 	public void increaseRotation(Vector3f delta){
-		Vector3f.add(_rotation, delta, _rotation);
+		this._rotation.x += delta.x;
+		this._rotation.y += delta.y;
+		this._rotation.z += delta.z;
 	}
 	
 	public void increaseScale(Vector3f delta){
-		Vector3f.add(_scale, delta, _scale);
+		this._scale.x += delta.x;
+		this._scale.y += delta.y;
+		this._scale.z += delta.z;
 	}
 	
 	public float getTextureXOffset(){
-		int column = _textureIndex % _model.getTexture().getNumberofRows();
-		return (float)column / (float)_model.getTexture().getNumberofRows();
+		int column = _textureIndex % _model.getTexture().getNumberOfRows();
+		return (float)column / (float)_model.getTexture().getNumberOfRows();
 	}
 	
 	public float getTextureYOffset(){
-		int row = _textureIndex % _model.getTexture().getNumberofRows();
-		return (float)row / (float)_model.getTexture().getNumberofRows();
+		int row = _textureIndex % _model.getTexture().getNumberOfRows();
+		return (float)row / (float)_model.getTexture().getNumberOfRows ();
 	}
 }

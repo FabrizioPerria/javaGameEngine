@@ -1,7 +1,7 @@
 package particlesInstance;
 
-import org.lwjgl.util.vector.Vector2f;
-import org.lwjgl.util.vector.Vector3f;
+import org.joml.Vector2f;
+import org.joml.Vector3f;
 
 import entities.Camera;
 import entities.Player;
@@ -31,7 +31,7 @@ public class ParticleInstanced {
 		nextStageOffset = new Vector2f();
 		blendFactor = 0;
 		this.texture = texture;
-		this.position = position;
+		this.position = new Vector3f(position);
 		this.velocity = velocity;
 		this.weightEffect = weightEffect;
 		this.lifeLength = lifeLength;
@@ -74,14 +74,14 @@ public class ParticleInstanced {
 	}
 	
 	public boolean update(Camera camera){
-		velocity.y += Player.GRAVITY * weightEffect * DisplayManager.getFrameTimeSeconds();
-		tmp.set(velocity);
-		tmp.scale(DisplayManager.getFrameTimeSeconds());
-		Vector3f.add(tmp, position, position);
-		distanceFromCamera = Vector3f.sub(camera.getPosition(), position, null).lengthSquared();
-		updateTextures();
-		elapsedTime += DisplayManager.getFrameTimeSeconds();
-		return elapsedTime < lifeLength;
+        velocity.y += Player.GRAVITY * weightEffect * DisplayManager.getFrameTimeSeconds();
+        tmp.set(velocity);
+        tmp.mul(DisplayManager.getFrameTimeSeconds());
+        position.add(tmp);
+        distanceFromCamera = camera.getPosition().sub(position, new Vector3f()).lengthSquared();
+        updateTextures();
+        elapsedTime += DisplayManager.getFrameTimeSeconds();
+        return elapsedTime < lifeLength;
 	}
 	
 	private void updateTextures(){

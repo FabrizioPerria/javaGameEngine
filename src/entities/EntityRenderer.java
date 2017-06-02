@@ -7,8 +7,8 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
-import org.lwjgl.util.vector.Matrix4f;
-import org.lwjgl.util.vector.Vector2f;
+import org.joml.Matrix4f;
+import org.joml.Vector2f;
 
 import models.RawModel;
 import models.TexturedModel;
@@ -55,22 +55,23 @@ public class EntityRenderer {
 		GL20.glEnableVertexAttribArray(VertexAttrib.TEXTURE_COORDINATE.ordinal());
 		GL20.glEnableVertexAttribArray(VertexAttrib.NORMAL.ordinal());
 		
-		_shader.loadNumberOfRows(texture.getNumberofRows());
+		_shader.loadNumberOfRows(texture.getNumberOfRows());
 		
 		if(texture.hasTransparency())
 			MasterRenderer.disableFaceCulling();
 		
-		_shader.loadFakeLight(texture.doFakeLight());
+		_shader.loadFakeLight(texture.useFakeLightning());
 		
 		_shader.loadSpecularAttributes(texture.getReflectivity(), texture.getShineDamper());
 		
 		GL13.glActiveTexture(GL13.GL_TEXTURE0);
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture.getTBO());
-		_shader.loadUseSpecularMap(texture.hasSpecularMap());
-		if(texture.hasSpecularMap()){
-			GL13.glActiveTexture(GL13.GL_TEXTURE6);
-			GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture.getSpecularMap());
-		}
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture.GetID());
+		
+//		_shader.loadUseSpecularMap(texture.hasSpecularMap());
+//		if(texture.hasSpecularMap()){
+//			GL13.glActiveTexture(GL13.GL_TEXTURE6);
+//			GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture.getSpecularMap());
+//		}
 	}
 	
 	private void unbindTexturedModel(){
@@ -84,7 +85,7 @@ public class EntityRenderer {
 	private void prepareInstance(Entity entity){
 		Matrix4f transformationMatrix = Maths.createTransformationMatrix(entity.getPosition(), entity.getRotation(), entity.getScale());
 		_shader.loadTransformationMatrix(transformationMatrix);
-		_shader.loadTextureOfsets(new Vector2f(entity.getTextureXOffset(), entity.getTextureYOffset()));
+		_shader.loadTextureOffsets(new Vector2f(entity.getTextureXOffset(), entity.getTextureYOffset()));
 	}
 	
 

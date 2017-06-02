@@ -1,6 +1,6 @@
 package shadows;
 
-import org.lwjgl.util.vector.Matrix4f;
+import org.joml.Matrix4f;
 
 import renderEngine.VertexAttrib;
 import shaders.ShaderProgram;

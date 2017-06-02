@@ -10,8 +10,8 @@ import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL31;
-import org.lwjgl.util.vector.Matrix4f;
-import org.lwjgl.util.vector.Vector3f;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 import entities.Camera;
 import models.RawModel;
@@ -95,43 +95,43 @@ public class ParticleInstancedRenderer {
 	}
 
 	private void updateModelViewMatrix(Vector3f position, Vector3f rotation, Vector3f scale, Matrix4f viewMatrix, float[] vboData){
-		Matrix4f modelMatrix = new Matrix4f();
-		modelMatrix.setIdentity();
-		Matrix4f.translate(position, modelMatrix, modelMatrix);	
-		modelMatrix.m00 = viewMatrix.m00;
-		modelMatrix.m01 = viewMatrix.m10;
-		modelMatrix.m02 = viewMatrix.m20;
-		modelMatrix.m10 = viewMatrix.m01;
-		modelMatrix.m11 = viewMatrix.m11;
-		modelMatrix.m12 = viewMatrix.m21;
-		modelMatrix.m20 = viewMatrix.m02;
-		modelMatrix.m21 = viewMatrix.m12;
-		modelMatrix.m22 = viewMatrix.m22;
-		
-		Matrix4f.rotate((float)Math.toRadians(rotation.z), new Vector3f(0,0,1), modelMatrix, modelMatrix);
-		Matrix4f.scale(scale, modelMatrix, modelMatrix);
-		
-		Matrix4f modelViewMatrix = Matrix4f.mul(viewMatrix, modelMatrix, null);
-		storeMatrixData(modelViewMatrix, vboData);
+	    Matrix4f modelMatrix = new Matrix4f();
+	    modelMatrix.identity();
+	    modelMatrix.translate(position);	
+	    modelMatrix.m00(viewMatrix.m00());
+	    modelMatrix.m01(viewMatrix.m10());
+	    modelMatrix.m02(viewMatrix.m20());
+	    modelMatrix.m10(viewMatrix.m01());
+	    modelMatrix.m11(viewMatrix.m11());
+	    modelMatrix.m12(viewMatrix.m21());
+	    modelMatrix.m20(viewMatrix.m02());
+	    modelMatrix.m21(viewMatrix.m12());
+	    modelMatrix.m22(viewMatrix.m22());
+	    
+	    modelMatrix.rotate((float)Math.toRadians(rotation.z), new Vector3f(0,0,1));
+	    modelMatrix.scale(scale);
+	    
+	    Matrix4f modelViewMatrix = new Matrix4f(viewMatrix).mul(modelMatrix);
+	    storeMatrixData(modelViewMatrix, vboData);
 	}
 
 	private void storeMatrixData(Matrix4f modelViewMatrix, float[] data){
-		data[pointer++] = modelViewMatrix.m00;
-		data[pointer++] = modelViewMatrix.m01;
-		data[pointer++] = modelViewMatrix.m02;
-		data[pointer++] = modelViewMatrix.m03;
-		data[pointer++] = modelViewMatrix.m10;
-		data[pointer++] = modelViewMatrix.m11;
-		data[pointer++] = modelViewMatrix.m12;
-		data[pointer++] = modelViewMatrix.m13;
-		data[pointer++] = modelViewMatrix.m20;
-		data[pointer++] = modelViewMatrix.m21;
-		data[pointer++] = modelViewMatrix.m22;
-		data[pointer++] = modelViewMatrix.m23;
-		data[pointer++] = modelViewMatrix.m30;
-		data[pointer++] = modelViewMatrix.m31;
-		data[pointer++] = modelViewMatrix.m32;
-		data[pointer++] = modelViewMatrix.m33;
+	    data[pointer++] = modelViewMatrix.m00();
+	    data[pointer++] = modelViewMatrix.m01();
+	    data[pointer++] = modelViewMatrix.m02();
+	    data[pointer++] = modelViewMatrix.m03();
+	    data[pointer++] = modelViewMatrix.m10();
+	    data[pointer++] = modelViewMatrix.m11();
+	    data[pointer++] = modelViewMatrix.m12();
+	    data[pointer++] = modelViewMatrix.m13();
+	    data[pointer++] = modelViewMatrix.m20();
+	    data[pointer++] = modelViewMatrix.m21();
+	    data[pointer++] = modelViewMatrix.m22();
+	    data[pointer++] = modelViewMatrix.m23();
+	    data[pointer++] = modelViewMatrix.m30();
+	    data[pointer++] = modelViewMatrix.m31();
+	    data[pointer++] = modelViewMatrix.m32();
+	    data[pointer++] = modelViewMatrix.m33();
 	}
 
 	protected void cleanUp(){

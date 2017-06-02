@@ -8,8 +8,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.lwjgl.util.vector.Vector2f;
-import org.lwjgl.util.vector.Vector3f;
+import org.joml.Vector2f;
+import org.joml.Vector3f;
 
 import models.RawModel;
 import renderEngine.Loader;
@@ -66,7 +66,7 @@ public class NormalMappedObjLoader {
 				VertexNM v0 = processVertex(vertex1, vertices, indices);
 				VertexNM v1 = processVertex(vertex2, vertices, indices);
 				VertexNM v2 = processVertex(vertex3, vertices, indices);
-				calculateTangents(v0, v1, v2, textures);//NEW
+				calculateTangents(v0, v1, v2, textures);
 				line = reader.readLine();
 			}
 			reader.close();
@@ -85,22 +85,27 @@ public class NormalMappedObjLoader {
 		return loader.loadToVAO(verticesArray, texturesArray, normalsArray, tangentsArray, indicesArray);
 	}
 
-	//NEW 
 	private static void calculateTangents(VertexNM v0, VertexNM v1, VertexNM v2,
 			List<Vector2f> textures) {
-		Vector3f delatPos1 = Vector3f.sub(v1.getPosition(), v0.getPosition(), null);
-		Vector3f delatPos2 = Vector3f.sub(v2.getPosition(), v0.getPosition(), null);
+		Vector3f deltaPos1 = new Vector3f();
+		deltaPos1 = v1.getPosition().sub(v0.getPosition(), deltaPos1);
+		Vector3f deltaPos2 = new Vector3f();
+		deltaPos2 = v2.getPosition().sub(v0.getPosition(), deltaPos2);
+		
 		Vector2f uv0 = textures.get(v0.getTextureIndex());
 		Vector2f uv1 = textures.get(v1.getTextureIndex());
 		Vector2f uv2 = textures.get(v2.getTextureIndex());
-		Vector2f deltaUv1 = Vector2f.sub(uv1, uv0, null);
-		Vector2f deltaUv2 = Vector2f.sub(uv2, uv0, null);
+		Vector2f deltaUv1 = new Vector2f();
+		deltaUv1 = uv1.sub(uv0, deltaUv1);
+		Vector2f deltaUv2 = new Vector2f();
+		deltaUv2 = uv2.sub(uv0, deltaUv2);
 
 		float r = 1.0f / (deltaUv1.x * deltaUv2.y - deltaUv1.y * deltaUv2.x);
-		delatPos1.scale(deltaUv2.y);
-		delatPos2.scale(deltaUv1.y);
-		Vector3f tangent = Vector3f.sub(delatPos1, delatPos2, null);
-		tangent.scale(r);
+		deltaPos1.mul(deltaUv2.y, deltaPos1);
+		deltaPos2.mul(deltaUv1.y,deltaPos2);
+		Vector3f tangent = new Vector3f();
+		tangent = deltaPos1.sub(deltaPos2, tangent);
+		tangent.mul(r, tangent);
 		v0.addTangent(tangent);
 		v1.addTangent(tangent);
 		v2.addTangent(tangent);
@@ -171,7 +176,7 @@ public class NormalMappedObjLoader {
 				return dealWithAlreadyProcessedVertex(anotherVertex, newTextureIndex,
 						newNormalIndex, indices, vertices);
 			} else {
-				VertexNM duplicateVertex = previousVertex.duplicate(vertices.size());//NEW
+				VertexNM duplicateVertex = new VertexNM(vertices.size(), previousVertex.getPosition());
 				duplicateVertex.setTextureIndex(newTextureIndex);
 				duplicateVertex.setNormalIndex(newNormalIndex);
 				previousVertex.setDuplicateVertex(duplicateVertex);
@@ -179,6 +184,7 @@ public class NormalMappedObjLoader {
 				indices.add(duplicateVertex.getIndex());
 				return duplicateVertex;
 			}
+
 		}
 	}
 

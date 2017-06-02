@@ -9,11 +9,10 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
-import org.lwjgl.opengl.GL32;
-import org.lwjgl.util.vector.Matrix4f;
-import org.lwjgl.util.vector.Vector2f;
-import org.lwjgl.util.vector.Vector3f;
-import org.lwjgl.util.vector.Vector4f;
+import org.joml.Matrix4f;
+import org.joml.Vector2f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 public abstract class ShaderProgram {	
 	private int programID;
@@ -36,13 +35,6 @@ public abstract class ShaderProgram {
 			e.printStackTrace();
 			System.exit(-1);
 		}
-		
-//		try {
-//			geometryShaderID = loadShader("src/" + Filename + ".geometry.glsl", GL32.GL_GEOMETRY_SHADER);
-//			GL20.glAttachShader(programID, geometryShaderID);
-//		} catch(Exception e) {
-//			//the geometry shader is optional so even if the shader code is not found, we can still run the game
-//		}
 
 		bindAttributes();
 		GL20.glLinkProgram(programID);
@@ -131,8 +123,7 @@ public abstract class ShaderProgram {
     }
 	
 	protected void loadMatrix4f(int location, Matrix4f matrix){
-		matrix.store(matrixBuffer);
-		matrixBuffer.flip();
-		GL20.glUniformMatrix4(location, false, matrixBuffer);
+		matrix.get(matrixBuffer);
+		GL20.glUniformMatrix4fv(location, false, matrixBuffer);
 	}
 }

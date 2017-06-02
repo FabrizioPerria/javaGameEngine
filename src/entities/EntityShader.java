@@ -2,10 +2,10 @@ package entities;
 
 import java.util.List;
 
-import org.lwjgl.util.vector.Matrix4f;
-import org.lwjgl.util.vector.Vector2f;
-import org.lwjgl.util.vector.Vector3f;
-import org.lwjgl.util.vector.Vector4f;
+import org.joml.Matrix4f;
+import org.joml.Vector2f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 import ambient.AmbientLight;
 import ambient.Fog;
@@ -21,8 +21,8 @@ public class EntityShader extends ShaderProgram {
 	private int location_transformationMatrix; 
 	private int location_projectionMatrix;
 	private int location_viewMatrix;
-	private int[] location_lightPosition;
-	private int[] location_lightColor;
+	private int location_lightPosition[];
+	private int location_lightColor[];
 	private int location_reflectivity;
 	private int location_shineDamper;
 	private int location_fakeLight;
@@ -40,8 +40,10 @@ public class EntityShader extends ShaderProgram {
 	private int location_shadowDistance;
 	private int location_transitionDistance;
 	private int location_shadowMapSize;	
-	private int location_specularMap;
-	private int location_hasSpecularMap;
+//	private int location_specularMap;
+//	private int location_hasSpecularMap;
+	
+
 	
 	public EntityShader() {
 		super(filename);
@@ -49,8 +51,8 @@ public class EntityShader extends ShaderProgram {
 
 	@Override
 	protected void bindAttributes() {
-		super.bindFragmentOutput(0, "color");
-		super.bindFragmentOutput(1, "brightColor");
+//		super.bindFragmentOutput(0, "color");
+//		super.bindFragmentOutput(1, "brightColor");
 		
 		super.bindAttribute(VertexAttrib.POSITION.ordinal(), "inPosition");
 		super.bindAttribute(VertexAttrib.TEXTURE_COORDINATE.ordinal(), "inTexCoord");
@@ -62,8 +64,10 @@ public class EntityShader extends ShaderProgram {
 		location_transformationMatrix = super.getUniformLocation("transformationMatrix");
 		location_projectionMatrix = super.getUniformLocation("projectionMatrix");
 		location_viewMatrix = super.getUniformLocation("viewMatrix");
+
 		location_reflectivity = super.getUniformLocation("reflectivity");
 		location_shineDamper = super.getUniformLocation("shineDamper");
+		
 		location_fakeLight = super.getUniformLocation("fakeLight");
 		location_ambientLightAmount = super.getUniformLocation("ambientLightAmount");
 		location_density = super.getUniformLocation("density");
@@ -78,9 +82,9 @@ public class EntityShader extends ShaderProgram {
 		location_transitionDistance = super.getUniformLocation("transitionDistance");
 		location_shadowMapSize = super.getUniformLocation("shadowMapSize");
 		location_textureSampler = super.getUniformLocation("textureSampler");
-		location_specularMap = super.getUniformLocation("specularMap");
-		location_hasSpecularMap = super.getUniformLocation("hasSpecularMap");
-		
+//		location_specularMap = super.getUniformLocation("specularMap");
+//		location_hasSpecularMap = super.getUniformLocation("hasSpecularMap");
+//		
 		location_attenuationCoefficients = new int[LightDefinition.NUM_LIGHTS];
 		location_lightPosition = new int[LightDefinition.NUM_LIGHTS];
 		location_lightColor = new int[LightDefinition.NUM_LIGHTS];
@@ -95,11 +99,11 @@ public class EntityShader extends ShaderProgram {
 	public void connectTextureUnits(){
 		super.loadInt(location_textureSampler, 0);
 		super.loadInt(location_shadowMap, 5);
-		super.loadInt(location_specularMap, 6);
+//		super.loadInt(location_specularMap, 6);
 	}
 	
 	public void loadUseSpecularMap(boolean hasSpecularMap){
-		super.loadBoolean(location_hasSpecularMap, hasSpecularMap);
+//		super.loadBoolean(location_hasSpecularMap, hasSpecularMap);
 	}
 	
 	public void loadTransformationMatrix(Matrix4f matrix){
@@ -124,7 +128,7 @@ public class EntityShader extends ShaderProgram {
 			} else {
 				super.loadVector3f(location_lightPosition[i], new Vector3f(0,0,0));
 				super.loadVector3f(location_lightColor[i], new Vector3f(0,0,0));
-				super.loadVector3f(location_attenuationCoefficients[i], new Vector3f(0,0,1));
+				super.loadVector3f(location_attenuationCoefficients[i], new Vector3f(1,0,0));
 			}
 		}
 	}
@@ -152,10 +156,10 @@ public class EntityShader extends ShaderProgram {
 	}
 	
 	public void loadNumberOfRows(int numberOfRows){
-		super.loadFloat(location_numberOfRows, numberOfRows);
+		super.loadInt(location_numberOfRows, numberOfRows);
 	}
 	
-	public void loadTextureOfsets(Vector2f offset){
+	public void loadTextureOffsets(Vector2f offset){
 		super.loadVector2f(location_offsetTexture, offset);
 	}
 	

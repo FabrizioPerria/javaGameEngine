@@ -1,12 +1,13 @@
 package entities;
 
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.util.vector.Vector3f;
+import org.joml.Vector3f;
+import org.lwjgl.glfw.GLFW;
 
 import models.TexturedModel;
 import renderEngine.DisplayManager;
 import terrains.Terrain;
 import terrains.TerrainSet;
+import toolbox.Keyboard;
 
 public class Player extends Entity {
 
@@ -38,7 +39,7 @@ public class Player extends Entity {
 		try {
 			Terrain terrain = terrains.getTerrainByCoord(super.getPosition().x, super.getPosition().z);
 			float terrainHeight = terrain.getTerrainHeight(super.getPosition().x, super.getPosition().z);
-			if(super.getPosition().y < terrainHeight){
+			if(super.getPosition().y <= terrainHeight){
 				isInAir = false;
 				upwardsSpeed = 0;
 				super.getPosition().y = terrainHeight;
@@ -56,23 +57,23 @@ public class Player extends Entity {
 	}
 	
 	private void checkInputs(){
-		if(Keyboard.isKeyDown(Keyboard.KEY_W)){
+		if(Keyboard.isKeyDown(GLFW.GLFW_KEY_W)){
 			currentSpeed = RUN_SPEED;
-		} else if(Keyboard.isKeyDown(Keyboard.KEY_S)){
+		} else if(Keyboard.isKeyDown(GLFW.GLFW_KEY_S)){
 			currentSpeed = -RUN_SPEED;
 		} else {
 			currentSpeed = 0;
 		}
 
-		if(Keyboard.isKeyDown(Keyboard.KEY_D)){
+		if(Keyboard.isKeyDown(GLFW.GLFW_KEY_D)){
 			currentTurnSpeed = -TURN_SPEED;
-		} else if(Keyboard.isKeyDown(Keyboard.KEY_A)){
+		} else if(Keyboard.isKeyDown(GLFW.GLFW_KEY_A)){
 			currentTurnSpeed = TURN_SPEED;
 		} else {
 			currentTurnSpeed = 0;
 		}
 		
-		if(Keyboard.isKeyDown(Keyboard.KEY_SPACE)){
+		if(Keyboard.isKeyDown(GLFW.GLFW_KEY_SPACE)){
 			jump();
 		}
 	}

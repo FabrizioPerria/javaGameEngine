@@ -1,16 +1,16 @@
 package entities;
 
-import org.lwjgl.util.vector.Vector3f;
+import org.joml.Vector3f;
 
 public class Light {
 	private Vector3f _position;
 	private Vector3f _color;
-	private Vector3f _attenuationCoefficients;//in the equation AF.x * d^2 + AF.y * d + AF.z
+	private Vector3f _attenuationCoefficients;//in the equation AF.z * d^2 + AF.y * d + AF.x
 																		
 	
 	public Light(Vector3f position, Vector3f color) {
-		//0,0,1 means constant attenuation to 1.....so no attenuation at all
-		this(position, color, new Vector3f(0,0,1));
+		//1,0,0 means constant attenuation to 1.....so no attenuation at all
+		this(position, color, new Vector3f(1,0,0));
 	}
 	
 	public Light(Vector3f position, Vector3f color, Vector3f attenuationCoefficients) {
