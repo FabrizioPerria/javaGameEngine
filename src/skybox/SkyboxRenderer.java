@@ -13,7 +13,7 @@ import renderEngine.Loader;
 import renderEngine.VertexAttrib;
 
 public class SkyboxRenderer {
-	private static final float SIZE = 500f;
+	private static final float SIZE = 5000f;
 	
 	private static final float[] VERTICES = {        
 	    -SIZE,  SIZE, -SIZE,

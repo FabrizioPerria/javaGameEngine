@@ -87,10 +87,8 @@ public class NormalMappedObjLoader {
 
 	private static void calculateTangents(VertexNM v0, VertexNM v1, VertexNM v2,
 			List<Vector2f> textures) {
-		Vector3f deltaPos1 = new Vector3f();
-		deltaPos1 = v1.getPosition().sub(v0.getPosition(), deltaPos1);
-		Vector3f deltaPos2 = new Vector3f();
-		deltaPos2 = v2.getPosition().sub(v0.getPosition(), deltaPos2);
+		Vector3f deltaPos1 = v1.getPosition().sub(v0.getPosition(),new Vector3f());
+		Vector3f deltaPos2 = v2.getPosition().sub(v0.getPosition(), new Vector3f());
 		
 		Vector2f uv0 = textures.get(v0.getTextureIndex());
 		Vector2f uv1 = textures.get(v1.getTextureIndex());

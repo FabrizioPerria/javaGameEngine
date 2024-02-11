@@ -1,27 +1,17 @@
 package terrains;
 
 import java.util.List;
-import java.util.Map;
-
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
-import entities.Entity;
-
 import org.joml.Matrix4f;
-import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 import models.RawModel;
-import models.TexturedModel;
 import renderEngine.MasterRenderer;
 import renderEngine.VertexAttrib;
-//import shadows.ShadowBox;
-//import shadows.ShadowMapMasterRenderer;
-import textures.ModelTexture;
-import textures.Texture;
 import toolbox.Maths;
 
 public class TerrainRenderer {
@@ -39,6 +29,7 @@ public class TerrainRenderer {
 	}
 	
 	public void render(List<Terrain>terrains, Matrix4f toShadowMapSpace){
+		_shader.loadToShadowMapSpace(toShadowMapSpace);
 		for(Terrain terrain : terrains) {
 			prepareTerrain(terrain);
 			loadModelMatrix(terrain);

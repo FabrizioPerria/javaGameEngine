@@ -13,15 +13,6 @@ import entities.Entity;
 import entities.Light;
 import models.TexturedModel;
 
-/**
- * This class is in charge of using all of the classes in the shadows package to
- * carry out the shadow render pass, i.e. rendering the scene to the shadow map
- * texture. This is the only class in the shadows package which needs to be
- * referenced from outside the shadows package.
- * 
- * @author Karl
- *
- */
 public class ShadowMapMasterRenderer {
 
 	public static final int SHADOW_MAP_SIZE = 4096;
@@ -36,17 +27,6 @@ public class ShadowMapMasterRenderer {
 
 	private ShadowMapEntityRenderer entityRenderer;
 
-	/**
-	 * Creates instances of the important objects needed for rendering the scene
-	 * to the shadow map. This includes the {@link ShadowBox} which calculates
-	 * the position and size of the "view cuboid", the simple renderer and
-	 * shader program that are used to render objects to the shadow map, and the
-	 * {@link ShadowFrameBuffer} to which the scene is rendered. The size of the
-	 * shadow map is determined here.
-	 * 
-	 * @param camera
-	 *            - the camera being used in the scene.
-	 */
 	public ShadowMapMasterRenderer(Camera camera) {
 		shader = new ShadowShader();
 		shadowBox = new ShadowBox(lightViewMatrix, camera);

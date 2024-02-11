@@ -40,7 +40,7 @@ import water.WaterTile;
 public class MasterRenderer {
 	public static final float FOV = 70;
 	public static final float NEAR_PLANE = 0.1f;
-	public static final float FAR_PLANE = 1000;
+	public static final float FAR_PLANE = 10000;
 	
 	private Matrix4f projectionMatrix;
 

@@ -3,20 +3,16 @@ package engineTester;
 import renderEngine.DisplayManager;
 import renderEngine.Loader;
 import renderEngine.MasterRenderer;
-import renderEngine.ModelData;
 import renderEngine.OBJFileLoader;
-import renderEngine.OBJLoader;
 import terrains.Terrain;
 import terrains.TerrainSet;
 import terrains.TerrainTexturePack;
 import textures.ModelTexture;
 import textures.TerrainTexture;
-import toolbox.Keyboard;
 import toolbox.MousePicker;
 import water.WaterFrameBuffers;
 import water.WaterTile;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -35,13 +31,10 @@ import entities.Player;
 import font.TextMaster;
 import fontMeshCreator.FontType;
 import fontMeshCreator.GUIText;
-import guis.GuiRenderer;
-import guis.GuiShader;
 import guis.GuiTexture;
 import models.RawModel;
 import models.TexturedModel;
 import normalMappingObjConverter.NormalMappedObjLoader;
-import particlesInstance.ParticleInstanced;
 import particlesInstance.ParticleInstancedMaster;
 import particlesInstance.ParticleInstancedSystem;
 import particlesInstance.ParticleInstancedTexture;
@@ -52,6 +45,17 @@ public class MainGameLoop {
 		DisplayManager.createDisplay();
 		
 		Loader loader= new Loader();
+		
+		RawModel playerModel = loader.loadToVAO(OBJFileLoader.loadOBJ("person"));
+		ModelTexture playerTexture = new ModelTexture(loader.loadTexture("playerTexture"));
+		playerTexture.setShineDamper(10);
+		playerTexture.setReflectivity(2);
+		TexturedModel person = new TexturedModel(playerModel, playerTexture);
+		Player player = new Player(person, new Vector3f(-280,0,-640), new Vector3f(),  new Vector3f(0.6f, 0.6f, 0.6f));
+
+		Camera camera = new Camera(player);
+		MasterRenderer renderer = new MasterRenderer(loader, camera); 
+		
 		TextMaster.init(loader);
 		
 		FontType font = new FontType("candara", loader);
@@ -130,8 +134,9 @@ public class MainGameLoop {
 		Vector3f scaleT06 = new Vector3f(0.6f, 0.6f, 0.6f);
 		Vector3f scaleT02 = new Vector3f(0.2f, 0.2f, 0.2f);
 
-		
 		List<Entity> entities = new ArrayList<Entity>();
+		entities.add(player);
+
 		entities.add(new Entity(lamp, new Vector3f(-281, terrains.getHeight(-281, -680), -680), new Vector3f(), scaleT1));
 		entities.add(new Entity(lamp, new Vector3f(-350, terrains.getHeight(-350, -700), -700), new Vector3f(), scaleT1));
 		entities.add(new Entity(lamp, new Vector3f(-300, terrains.getHeight(-300, -705), -705), new Vector3f(), scaleT1));
@@ -172,7 +177,7 @@ public class MainGameLoop {
 		normalMapEntities.add(new Entity(crate, new Vector3f(-360, 30, -650), new Vector3f(), scaleT02));
 
 		List<Light> lights = new ArrayList<Light>();
-		lights.add(new Light(new Vector3f(0,10000,-300), new Vector3f(0.4f,0.4f,0.4f)));
+		lights.add(new Light(new Vector3f(1000,10000,-30000), new Vector3f(0.8f,0.8f,0.8f))); // SUN
 		
 		lights.add(new Light(new Vector3f(-281,terrains.getHeight(-281, -680)+14,-680), new Vector3f(1,0,0), new Vector3f(1, 0.01f, 0.002f)));
 		lights.add(new Light(new Vector3f(-350,terrains.getHeight(-350, -700)+14, -700), new Vector3f(0,1,1), new Vector3f(1, 0.01f, 0.002f)));
@@ -183,21 +188,13 @@ public class MainGameLoop {
 		Light light = new Light(new Vector3f(360,terrains.getHeight(360, -255)+14,-255), new Vector3f(0,1,0), new Vector3f(1, 0.01f, 0.002f));
 		lights.add(light);
 		
-		RawModel playerModel = loader.loadToVAO(OBJFileLoader.loadOBJ("person"));
-		ModelTexture playerTexture = new ModelTexture(loader.loadTexture("playerTexture"));
-		playerTexture.setShineDamper(10);
-		playerTexture.setReflectivity(2);
-		TexturedModel person = new TexturedModel(playerModel, playerTexture);
-
-		Player player = new Player(person, new Vector3f(-280,0,-640), new Vector3f(), scaleT06);
-		entities.add(player);
-
-		Camera camera = new Camera(player);
-		MasterRenderer renderer = new MasterRenderer(loader, camera); 
 		ParticleInstancedMaster.init(loader, renderer.getProjectionMatrix());
 		
 		List<GuiTexture> guis = new ArrayList<>();
 		guis.add(new GuiTexture(loader.loadTexture("health"), new Vector2f(0.8f, -0.9f), new Vector2f(0.15f, 0.25f)));
+		
+		GuiTexture shadowMap = new GuiTexture(renderer.getShadowMapID(), new Vector2f(0.5f, 0.5f), new Vector2f(0.5f, 0.5f));
+		//guis.add(shadowMap);
 		
 		List<WaterTile> waterTiles = new ArrayList<>();
 		waterTiles.add(new WaterTile(-280,-475, -1.5f));
@@ -211,7 +208,7 @@ public class MainGameLoop {
 		ParticleInstancedTexture starTexture = new ParticleInstancedTexture(loader.loadTexture("particleStar"), 1);
 		ParticleInstancedTexture fireTexture = new ParticleInstancedTexture(loader.loadTexture("particleAtlas"), 4);
 
-		ParticleInstancedSystem particleSystemFire = new ParticleInstancedSystem(fireTexture, 500, 25, 0.3f, 4, 1);
+		ParticleInstancedSystem particleSystemFire = new ParticleInstancedSystem(fireTexture, 500, 25, 0.3f, 1, 1);
 		particleSystemFire.randomizeRotation();
 		particleSystemFire.setDirection(new Vector3f(0,1,0), 0.1f);
 		particleSystemFire.setLifeError(0.1f);
@@ -224,6 +221,7 @@ public class MainGameLoop {
 		particleSystemStar.setSpeedError(0.4f);
 		particleSystemStar.setScaleError(0.8f);
 		Vector3f starPosition = new Vector3f(-300, 50, -700);
+		Vector3f firePosition = new Vector3f(-350, terrains.getHeight(-350, -750), -750);
 		
 		while (!GLFW.glfwWindowShouldClose(DisplayManager.window)) {
 			camera.move();
@@ -231,14 +229,15 @@ public class MainGameLoop {
 			picker.update();
 			particleSystemStar.generateParticles(starPosition);
 
-			particleSystemFire.generateParticles(player.getPosition());
+			particleSystemFire.generateParticles(firePosition);
 			ParticleInstancedMaster.update(camera);
 			Vector3f terrainPoint = picker.getCurrentTerrainPoint();
 			if(terrainPoint != null) {
-				System.out.println(terrainPoint);
+				//System.out.println(terrainPoint);
 				lampEntity.setPosition(terrainPoint);
 				light.setPosition(new Vector3f(terrainPoint.x, terrainPoint.y + 14, terrainPoint.z));
 			}
+			renderer.renderShadowMap(player, entities, normalMapEntities, lights.get(0));
 			
 			GL11.glEnable(GL30.GL_CLIP_DISTANCE0);
 			waterFBOs.bindReflectionFrameBuffer();

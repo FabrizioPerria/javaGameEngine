@@ -49,6 +49,7 @@ public class DisplayManager {
         GLFW.glfwWindowHint(GLFW.GLFW_DOUBLEBUFFER, GLFW.GLFW_FALSE);
         GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE);
         GLFW.glfwWindowHint(GLFW.GLFW_DOUBLEBUFFER, GLFW.GLFW_FALSE);
+        GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, 4);
 
         window = GLFW.glfwCreateWindow(WIDTH, HEIGHT, "3D Game engine", NULL, NULL);
         if (window == NULL) {
@@ -75,6 +76,7 @@ public class DisplayManager {
         GLFW.glfwShowWindow(window);
 
         GL.createCapabilities();
+        glEnable(GL13.GL_MULTISAMPLE);
         
         lastFrameTime = getCurrentTime();
 	}
