@@ -38,6 +38,8 @@ import normalMappingObjConverter.NormalMappedObjLoader;
 import particlesInstance.ParticleInstancedMaster;
 import particlesInstance.ParticleInstancedSystem;
 import particlesInstance.ParticleInstancedTexture;
+import postProcessing.Fbo;
+import postProcessing.PostProcessing;
 
 public class MainGameLoop {
 
@@ -193,7 +195,7 @@ public class MainGameLoop {
 		List<GuiTexture> guis = new ArrayList<>();
 		guis.add(new GuiTexture(loader.loadTexture("health"), new Vector2f(0.8f, -0.9f), new Vector2f(0.15f, 0.25f)));
 		
-		GuiTexture shadowMap = new GuiTexture(renderer.getShadowMapID(), new Vector2f(0.5f, 0.5f), new Vector2f(0.5f, 0.5f));
+		// GuiTexture shadowMap = new GuiTexture(renderer.getShadowMapID(), new Vector2f(0.5f, 0.5f), new Vector2f(0.5f, 0.5f));
 		//guis.add(shadowMap);
 		
 		List<WaterTile> waterTiles = new ArrayList<>();
@@ -223,6 +225,9 @@ public class MainGameLoop {
 		Vector3f starPosition = new Vector3f(-300, 50, -700);
 		Vector3f firePosition = new Vector3f(-350, terrains.getHeight(-350, -750), -750);
 		
+		Fbo outputFbo = new Fbo(2 * DisplayManager.getWindowWidth(), 2 *DisplayManager.getWindowHeight(), Fbo.DEPTH_RENDER_BUFFER);
+		PostProcessing.init(loader);
+		
 		while (!GLFW.glfwWindowShouldClose(DisplayManager.window)) {
 			camera.move();
 			player.move(terrains);
@@ -232,39 +237,45 @@ public class MainGameLoop {
 			particleSystemFire.generateParticles(firePosition);
 			ParticleInstancedMaster.update(camera);
 			Vector3f terrainPoint = picker.getCurrentTerrainPoint();
-			if(terrainPoint != null) {
+			if (terrainPoint != null) {
 				//System.out.println(terrainPoint);
 				lampEntity.setPosition(terrainPoint);
 				light.setPosition(new Vector3f(terrainPoint.x, terrainPoint.y + 14, terrainPoint.z));
 			}
 			renderer.renderShadowMap(player, entities, normalMapEntities, lights.get(0));
-			
+
 			GL11.glEnable(GL30.GL_CLIP_DISTANCE0);
 			waterFBOs.bindReflectionFrameBuffer();
 			float distance = 2 * (camera.getPosition().y - waterTiles.get(0).getHeight());
 			camera.getPosition().y -= distance;
 			camera.invertPitch();
-			renderer.renderScene(player, entities, normalMapEntities, terrains, waterTiles, waterFBOs, lights, camera, reflectionClippingPlane);
-			
+			renderer.renderScene(player, entities, normalMapEntities, terrains, waterTiles, waterFBOs, lights, camera,
+					reflectionClippingPlane);
+
 			camera.getPosition().y += distance;
 			camera.invertPitch();
 			waterFBOs.bindRefractionFrameBuffer();
-			renderer.renderScene(player, entities, normalMapEntities, terrains, waterTiles, waterFBOs, lights, camera, refractionClippingPlane);
-			
+			renderer.renderScene(player, entities, normalMapEntities, terrains, waterTiles, waterFBOs, lights, camera,
+					refractionClippingPlane);
+
 			GL11.glDisable(GL30.GL_CLIP_DISTANCE0);
 			waterFBOs.unbindCurrentFrameBuffer();
-			renderer.renderScene(player, entities, normalMapEntities, terrains, waterTiles, waterFBOs, lights, camera, sceneClippingPlane);
-			
+
+			outputFbo.bindFrameBuffer();
+			renderer.renderScene(player, entities, normalMapEntities, terrains, waterTiles, waterFBOs, lights, camera,
+					sceneClippingPlane);
 			renderer.renderWater(waterTiles, waterFBOs, lights, camera);
-			
 			ParticleInstancedMaster.renderParticles(camera);
-			
+			outputFbo.unbindFrameBuffer();
+			PostProcessing.doPostProcessing(outputFbo.getColourTexture(), 0);//, outputFbo.getBrightTexture());
 			renderer.renderGui(guis);
-			
+
 			TextMaster.render();
 			DisplayManager.updateDisplay();
 		}
 		
+		PostProcessing.cleanUp();
+		outputFbo.cleanUp();
 		ParticleInstancedMaster.cleanUp();
 		TextMaster.cleanUp();
 		waterFBOs.cleanUp();
